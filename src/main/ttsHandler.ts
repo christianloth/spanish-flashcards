@@ -143,7 +143,7 @@ export async function synthesizeSpeech(
 
   // CACHE HIT - return existing audio
   if (existsSync(cachePath)) {
-    console.log('[TTS Cache] Hit:', text.substring(0, 30))
+    console.log('[TTS Cache] Hit:', text)
     const audioBuffer = readFileSync(cachePath)
 
     // Update lastAccessed timestamp
@@ -156,7 +156,7 @@ export async function synthesizeSpeech(
   }
 
   // CACHE MISS - call API
-  console.log('[TTS Cache] Miss, calling API:', text.substring(0, 30))
+  console.log('[TTS Cache] Miss, calling API:', text)
 
   try {
     // Generate audio using ElevenLabs

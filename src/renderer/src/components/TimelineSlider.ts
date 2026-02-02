@@ -52,9 +52,10 @@ export class TimelineSlider {
     this.entriesContainer = document.createElement('div')
     this.entriesContainer.className = 'timeline-entries'
 
-    // Current position marker
+    // Current position marker (hidden - not used)
     this.currentMarker = document.createElement('div')
     this.currentMarker.className = 'current-marker'
+    this.currentMarker.style.display = 'none'
 
     // Selection window
     this.windowEl = document.createElement('div')
@@ -236,11 +237,8 @@ export class TimelineSlider {
   }
 
   private updateCurrentMarker(): void {
-    if (this.totalDuration === 0) return
-
-    const percent = (this.currentTime / this.totalDuration) * 100
-    this.currentMarker.style.left = `${percent}%`
-    this.currentMarker.style.display = 'block'
+    // Disabled - marker hidden permanently
+    return
   }
 
   private renderEntryMarkers(): void {
@@ -257,6 +255,13 @@ export class TimelineSlider {
       const percent = (entry.cumulativeStartTime / this.totalDuration) * 100
       marker.style.left = `${percent}%`
       marker.title = `${entry.englishWord} (${formatTime(entry.cumulativeStartTime)})`
+
+      // Make markers clickable to seek to that entry
+      marker.style.cursor = 'pointer'
+      marker.addEventListener('click', (e) => {
+        e.stopPropagation()
+        this.onSeek?.(entry.cumulativeStartTime)
+      })
 
       this.entriesContainer.appendChild(marker)
     }

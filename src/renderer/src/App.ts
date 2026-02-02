@@ -123,16 +123,6 @@ export class App {
     this.mainContainer.appendChild(this.playbackControls.getElement())
     this.mainContainer.appendChild(this.timelineSlider.getElement())
 
-    // TTS info
-    const ttsInfo = document.createElement('div')
-    ttsInfo.className = 'voice-info'
-    ttsInfo.id = 'tts-info'
-    ttsInfo.innerHTML = `
-      <strong>TTS Engine:</strong> ElevenLabs (Multilingual v2)<br>
-      <strong>Voice:</strong> Bella (Multilingual) - Supports Castilian Spanish
-    `
-    this.mainContainer.appendChild(ttsInfo)
-
     // Settings link
     const settingsLink = document.createElement('button')
     settingsLink.className = 'settings-link'

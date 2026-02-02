@@ -347,12 +347,15 @@ body {
   background: rgba(255, 255, 255, 0.2);
   border-radius: 2px;
   transition: all 0.2s;
+  pointer-events: auto;
+  z-index: 10;
 }
 
 .entry-marker.current {
   background: var(--accent);
   height: 35px;
   width: 4px;
+  z-index: 11;
 }
 
 .current-marker {
