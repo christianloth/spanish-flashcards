@@ -48,6 +48,7 @@ export class App {
     this.playbackControls.onNext = () => this.playbackEngine.next()
     this.playbackControls.onPrev = () => this.playbackEngine.prev()
     this.playbackControls.onSpeedChange = (rate) => this.handleSpeedChange(rate)
+    this.playbackControls.onExportAudio = (speed) => this.exportAudioFile(speed)
 
     // Timeline window changes
     this.timelineSlider.onWindowChange = (window) => {
@@ -75,6 +76,13 @@ export class App {
   async initialize(): Promise<void> {
     // Render the app shell
     this.render()
+
+    // Check if FFmpeg is available
+    const ffmpegAvailable = await window.electronAPI.checkFFmpeg()
+    if (!ffmpegAvailable) {
+      console.warn('FFmpeg not found - audio export will be unavailable')
+      // Optionally show a warning to user
+    }
 
     // Check if TTS is configured
     const isConfigured = await this.ttsService.checkReady()
@@ -294,6 +302,52 @@ export class App {
       setTimeout(() => {
         this.fileSelector.setPreloadButtonState(true, 'Preload to Cache')
       }, 3000)
+    }
+  }
+
+  private async exportAudioFile(speed: number): Promise<void> {
+    console.log('[Export] Starting export with speed:', speed)
+
+    if (!this.currentFile) {
+      console.error('[Export] No file loaded')
+      this.playbackControls.setExportButtonState('error', 'No file loaded')
+      return
+    }
+
+    const entries = this.currentFile.entries.map(entry => ({
+      englishWord: entry.englishWord,
+      spanishWord: entry.spanishWord,
+      spanishSentence: entry.spanishSentence
+    }))
+
+    console.log('[Export] Exporting', entries.length, 'entries from', this.currentFile.name)
+
+    this.playbackControls.setExportButtonState('exporting', 'Starting export...')
+
+    // Setup progress listener
+    window.electronAPI.onExportProgress((data) => {
+      console.log('[Export Progress]', data.phase, data.percent + '%')
+      const message = `${data.phase} (${data.percent}%)`
+      this.playbackControls.setExportButtonState('exporting', message)
+    })
+
+    try {
+      const result = await window.electronAPI.exportAudio(entries, this.currentFile.name, speed)
+      console.log('[Export] Result:', result)
+
+      if (result.success && result.path) {
+        const filename = result.path.split('/').pop()
+        this.playbackControls.setExportButtonState('success', `Saved: ${filename}`)
+      } else {
+        console.error('[Export] Failed:', result.error)
+        this.playbackControls.setExportButtonState('error', result.error || 'Export failed')
+      }
+    } catch (error) {
+      console.error('[Export] Exception:', error)
+      this.playbackControls.setExportButtonState(
+        'error',
+        error instanceof Error ? error.message : 'Unknown error'
+      )
     }
   }
 }

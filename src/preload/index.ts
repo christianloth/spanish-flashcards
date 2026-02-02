@@ -65,6 +65,23 @@ contextBridge.exposeInMainWorld('electronAPI', {
     clearCache: (): Promise<{ deleted: number }> => {
       return ipcRenderer.invoke('tts-clear-cache')
     }
+  },
+
+  // Audio export operations
+  exportAudio: (
+    entries: Array<{ englishWord: string; spanishWord: string; spanishSentence: string }>,
+    filename: string,
+    speed: number
+  ): Promise<{ success: boolean; path?: string; error?: string }> => {
+    return ipcRenderer.invoke('export-audio', entries, filename, speed)
+  },
+
+  onExportProgress: (callback: (data: { phase: string; percent: number }) => void): void => {
+    ipcRenderer.on('export-progress', (_event, data) => callback(data))
+  },
+
+  checkFFmpeg: (): Promise<boolean> => {
+    return ipcRenderer.invoke('check-ffmpeg')
   }
 })
 
@@ -92,6 +109,13 @@ declare global {
         }>
         clearCache: () => Promise<{ deleted: number }>
       }
+      exportAudio: (
+        entries: Array<{ englishWord: string; spanishWord: string; spanishSentence: string }>,
+        filename: string,
+        speed: number
+      ) => Promise<{ success: boolean; path?: string; error?: string }>
+      onExportProgress: (callback: (data: { phase: string; percent: number }) => void) => void
+      checkFFmpeg: () => Promise<boolean>
     }
   }
 }

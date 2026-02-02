@@ -6,6 +6,12 @@ interface VoiceInfo {
   gender: string
 }
 
+interface FlashcardEntry {
+  englishWord: string
+  spanishWord: string
+  spanishSentence: string
+}
+
 interface ElectronAPI {
   getInputFiles: () => Promise<string[]>
   loadFile: (filename: string) => Promise<string>
@@ -27,6 +33,13 @@ interface ElectronAPI {
     }>
     clearCache: () => Promise<{ deleted: number }>
   }
+  exportAudio: (
+    entries: FlashcardEntry[],
+    filename: string,
+    speed: number
+  ) => Promise<{ success: boolean; path?: string; error?: string }>
+  onExportProgress: (callback: (data: { phase: string; percent: number }) => void) => void
+  checkFFmpeg: () => Promise<boolean>
 }
 
 declare global {

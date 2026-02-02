@@ -232,7 +232,7 @@ body {
   border-radius: var(--border-radius);
 }
 
-.playback-controls button {
+.playback-controls button:not(.preload-cache-button) {
   width: 50px;
   height: 50px;
   border-radius: 50%;
@@ -247,12 +247,12 @@ body {
   justify-content: center;
 }
 
-.playback-controls button:hover:not(:disabled) {
+.playback-controls button:not(.preload-cache-button):hover:not(:disabled) {
   background: var(--accent);
   transform: scale(1.05);
 }
 
-.playback-controls button:disabled {
+.playback-controls button:not(.preload-cache-button):disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
@@ -296,6 +296,69 @@ body {
 .speed-control:hover,
 .speed-control:focus {
   border-color: var(--accent);
+}
+
+/* Export controls */
+.export-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-left: 20px;
+}
+
+.export-container label {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.export-speed-input {
+  width: 60px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--timeline-track);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  outline: none;
+  text-align: center;
+}
+
+.export-speed-input:hover,
+.export-speed-input:focus {
+  border-color: var(--accent);
+}
+
+.btn-export {
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  background: var(--accent);
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-speed);
+  white-space: nowrap;
+}
+
+.btn-export:hover:not(:disabled) {
+  background: var(--accent-light);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(233, 69, 96, 0.3);
+}
+
+.btn-export:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.export-status {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 /* Timeline slider */
@@ -466,6 +529,11 @@ body {
   .speed-container {
     margin-left: 0;
     margin-top: 10px;
+  }
+
+  .export-container {
+    width: 100%;
+    justify-content: center;
   }
 }
 

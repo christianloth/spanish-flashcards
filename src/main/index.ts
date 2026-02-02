@@ -13,6 +13,7 @@ import {
   getCacheStats,
   clearCache
 } from './ttsHandler'
+import { exportAudioFile, checkFFmpegAvailable } from './audioExporter'
 
 // Load API key from .env file on startup
 initFromEnv()
@@ -95,6 +96,18 @@ ipcMain.handle('tts-get-cache-stats', async () => {
 
 ipcMain.handle('tts-clear-cache', async () => {
   return clearCache()
+})
+
+// Audio export IPC handlers
+ipcMain.handle('export-audio', async (_event, entries, filename, speed) => {
+  const onProgress = (phase: string, percent: number) => {
+    _event.sender.send('export-progress', { phase, percent })
+  }
+  return exportAudioFile(entries, filename, speed, onProgress)
+})
+
+ipcMain.handle('check-ffmpeg', async () => {
+  return checkFFmpegAvailable()
 })
 
 app.whenReady().then(() => {
