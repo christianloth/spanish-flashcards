@@ -263,4 +263,35 @@ export class TTSService {
   get isConfigured(): boolean {
     return this.isReady
   }
+
+  /**
+   * Preload audio into cache without playing
+   * Returns progress updates via callback
+   */
+  async preloadToCache(
+    texts: Array<{ text: string; lang: 'en' | 'es' }>,
+    onProgress?: (current: number, total: number, text: string) => void
+  ): Promise<void> {
+    if (!this.isReady) {
+      throw new Error('TTS service not configured. Please set your ElevenLabs API key.')
+    }
+
+    const total = texts.length
+
+    for (let i = 0; i < texts.length; i++) {
+      const { text, lang } = texts[i]
+
+      if (onProgress) {
+        onProgress(i + 1, total, text)
+      }
+
+      try {
+        // This will use cache if available, or generate and cache if not
+        await window.electronAPI.tts.synthesize(text, lang, this.selectedVoiceId || undefined)
+      } catch (error) {
+        console.error(`[TTSService] Error preloading "${text}":`, error)
+        // Continue with other entries even if one fails
+      }
+    }
+  }
 }

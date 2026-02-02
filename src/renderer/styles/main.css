@@ -98,6 +98,30 @@ body {
   border-color: var(--accent);
 }
 
+.preload-cache-button {
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  background: var(--accent);
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-speed);
+  white-space: nowrap;
+}
+
+.preload-cache-button:hover:not(:disabled) {
+  background: var(--accent-light);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(233, 69, 96, 0.3);
+}
+
+.preload-cache-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Flashcard */
 .flashcard {
   perspective: 1000px;

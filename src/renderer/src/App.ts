@@ -40,6 +40,7 @@ export class App {
   private setupEventHandlers(): void {
     // File selection
     this.fileSelector.onFileSelect = (filename) => this.loadFile(filename)
+    this.fileSelector.onPreloadCache = () => this.preloadCache()
 
     // Playback controls
     this.playbackControls.onPlay = () => this.playbackEngine.play()
@@ -257,5 +258,52 @@ export class App {
 
   private handlePlaybackComplete(): void {
     this.flashCard.setPhase('idle')
+  }
+
+  private async preloadCache(): Promise<void> {
+    if (!this.currentFile) {
+      console.error('No file loaded')
+      return
+    }
+
+    const entries = this.currentFile.entries
+
+    // Prepare all texts to cache
+    const textsToCache: Array<{ text: string; lang: 'en' | 'es' }> = []
+
+    for (const entry of entries) {
+      textsToCache.push(
+        { text: entry.englishWord, lang: 'en' },
+        { text: entry.spanishWord, lang: 'es' },
+        { text: entry.spanishSentence, lang: 'es' }
+      )
+    }
+
+    // Update button to show progress
+    this.fileSelector.setPreloadButtonState(false, 'Loading...')
+
+    try {
+      await this.ttsService.preloadToCache(textsToCache, (current, total, text) => {
+        const progress = Math.round((current / total) * 100)
+        this.fileSelector.setPreloadButtonState(false, `Loading ${progress}%`)
+        console.log(`[Cache] ${current}/${total}: ${text.substring(0, 30)}...`)
+      })
+
+      // Reset button
+      this.fileSelector.setPreloadButtonState(true, 'Preload to Cache')
+      console.log('[Cache] Preload complete!')
+
+      // Show success message briefly
+      this.fileSelector.setPreloadButtonState(true, '✓ Cache Loaded!')
+      setTimeout(() => {
+        this.fileSelector.setPreloadButtonState(true, 'Preload to Cache')
+      }, 3000)
+    } catch (error) {
+      console.error('[Cache] Preload failed:', error)
+      this.fileSelector.setPreloadButtonState(true, 'Preload Failed')
+      setTimeout(() => {
+        this.fileSelector.setPreloadButtonState(true, 'Preload to Cache')
+      }, 3000)
+    }
   }
 }

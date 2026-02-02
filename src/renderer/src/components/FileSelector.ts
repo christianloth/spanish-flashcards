@@ -1,8 +1,10 @@
 export class FileSelector {
   private container: HTMLElement
   private select: HTMLSelectElement
+  private preloadButton: HTMLButtonElement
   private files: string[] = []
   public onFileSelect: ((filename: string) => void) | null = null
+  public onPreloadCache: (() => void) | null = null
 
   constructor() {
     this.container = document.createElement('div')
@@ -16,8 +18,15 @@ export class FileSelector {
     this.select.id = 'file-select'
     this.select.addEventListener('change', () => this.handleChange())
 
+    this.preloadButton = document.createElement('button')
+    this.preloadButton.className = 'preload-cache-button'
+    this.preloadButton.textContent = 'Preload to Cache'
+    this.preloadButton.disabled = true
+    this.preloadButton.addEventListener('click', () => this.handlePreload())
+
     this.container.appendChild(label)
     this.container.appendChild(this.select)
+    this.container.appendChild(this.preloadButton)
   }
 
   async loadFiles(): Promise<void> {
@@ -53,8 +62,19 @@ export class FileSelector {
 
   private handleChange(): void {
     const filename = this.select.value
-    if (filename && this.onFileSelect) {
-      this.onFileSelect(filename)
+    if (filename) {
+      this.preloadButton.disabled = false
+      if (this.onFileSelect) {
+        this.onFileSelect(filename)
+      }
+    } else {
+      this.preloadButton.disabled = true
+    }
+  }
+
+  private handlePreload(): void {
+    if (this.onPreloadCache) {
+      this.onPreloadCache()
     }
   }
 
@@ -64,5 +84,13 @@ export class FileSelector {
 
   setSelectedFile(filename: string): void {
     this.select.value = filename
+    this.preloadButton.disabled = !filename
+  }
+
+  setPreloadButtonState(enabled: boolean, text?: string): void {
+    this.preloadButton.disabled = !enabled
+    if (text) {
+      this.preloadButton.textContent = text
+    }
   }
 }
