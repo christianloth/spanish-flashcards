@@ -19,6 +19,7 @@ export class TimelineSlider {
   private window: TimeWindow = { startTime: 0, endTime: 30 }
   private entries: FlashcardEntry[] = []
   private currentEntryIndex: number = -1
+  private currentTime: number = 0
 
   private isDraggingWindow: boolean = false
   private isDraggingLeft: boolean = false
@@ -27,6 +28,7 @@ export class TimelineSlider {
   private dragStartWindow: TimeWindow = { startTime: 0, endTime: 0 }
 
   public onWindowChange: ((window: TimeWindow) => void) | null = null
+  public onSeek: ((time: number) => void) | null = null
 
   constructor() {
     this.container = document.createElement('div')
@@ -96,6 +98,20 @@ export class TimelineSlider {
   }
 
   private setupDragHandlers(): void {
+    // Click on track to seek
+    this.track.addEventListener('click', (e) => {
+      // Ignore clicks on window or handles
+      if (this.isDraggingWindow || this.isDraggingLeft || this.isDraggingRight) return
+      if (e.target === this.windowEl || e.target === this.leftHandle || e.target === this.rightHandle) return
+
+      const rect = this.track.getBoundingClientRect()
+      const clickX = e.clientX - rect.left
+      const clickPercent = clickX / rect.width
+      const clickTime = clickPercent * this.totalDuration
+
+      this.onSeek?.(clickTime)
+    })
+
     // Window drag - move entire selection
     this.windowEl.addEventListener('mousedown', (e) => {
       if (e.target === this.leftHandle || e.target === this.rightHandle) return
@@ -206,13 +222,25 @@ export class TimelineSlider {
       marker.classList.toggle('current', i === index)
     })
 
-    // Update current position marker
+    // Update current time to entry start time if we have entry data
     if (index >= 0 && index < this.entries.length) {
       const entry = this.entries[index]
-      const percent = (entry.cumulativeStartTime / this.totalDuration) * 100
-      this.currentMarker.style.left = `${percent}%`
-      this.currentMarker.style.display = 'block'
+      this.currentTime = entry.cumulativeStartTime
+      this.updateCurrentMarker()
     }
+  }
+
+  updatePlaybackPosition(time: number): void {
+    this.currentTime = time
+    this.updateCurrentMarker()
+  }
+
+  private updateCurrentMarker(): void {
+    if (this.totalDuration === 0) return
+
+    const percent = (this.currentTime / this.totalDuration) * 100
+    this.currentMarker.style.left = `${percent}%`
+    this.currentMarker.style.display = 'block'
   }
 
   private renderEntryMarkers(): void {

@@ -7,6 +7,8 @@ export class Settings {
   private testButton: HTMLButtonElement
   private statusEl: HTMLElement
   private ttsService: TTSService
+  private cacheStatsEl: HTMLElement
+  private clearCacheButton: HTMLButtonElement
 
   public onConfigured: (() => void) | null = null
 
@@ -72,15 +74,48 @@ export class Settings {
     this.statusEl = document.createElement('div')
     this.statusEl.className = 'settings-status'
 
+    // Cache section
+    const cacheSection = document.createElement('div')
+    cacheSection.className = 'settings-section'
+    cacheSection.style.marginTop = '30px'
+    cacheSection.style.paddingTop = '20px'
+    cacheSection.style.borderTop = '1px solid #e0e0e0'
+
+    const cacheTitle = document.createElement('h3')
+    cacheTitle.textContent = 'Audio Cache'
+    cacheTitle.style.marginBottom = '10px'
+
+    this.cacheStatsEl = document.createElement('div')
+    this.cacheStatsEl.id = 'cache-stats'
+    this.cacheStatsEl.style.margin = '10px 0'
+    this.cacheStatsEl.style.padding = '15px'
+    this.cacheStatsEl.style.background = '#f5f5f5'
+    this.cacheStatsEl.style.borderRadius = '4px'
+    this.cacheStatsEl.innerHTML = '<p style="margin: 0;">Loading cache statistics...</p>'
+
+    this.clearCacheButton = document.createElement('button')
+    this.clearCacheButton.id = 'clear-cache-btn'
+    this.clearCacheButton.textContent = 'Clear Cache'
+    this.clearCacheButton.className = 'btn-secondary'
+    this.clearCacheButton.style.marginTop = '10px'
+    this.clearCacheButton.addEventListener('click', () => this.clearCache())
+
+    cacheSection.appendChild(cacheTitle)
+    cacheSection.appendChild(this.cacheStatsEl)
+    cacheSection.appendChild(this.clearCacheButton)
+
     // Assemble
     this.container.appendChild(title)
     this.container.appendChild(description)
     this.container.appendChild(inputGroup)
     this.container.appendChild(buttonGroup)
     this.container.appendChild(this.statusEl)
+    this.container.appendChild(cacheSection)
 
     // Check if already configured
     this.checkExistingKey()
+    // Load cache stats
+    this.updateCacheStats()
   }
 
   private async checkExistingKey(): Promise<void> {
@@ -141,6 +176,55 @@ export class Settings {
   private showStatus(message: string, type: 'info' | 'success' | 'error'): void {
     this.statusEl.textContent = message
     this.statusEl.className = `settings-status status-${type}`
+  }
+
+  private async updateCacheStats(): Promise<void> {
+    try {
+      const stats = await window.electronAPI.tts.getCacheStats()
+
+      if (stats.totalFiles === 0) {
+        this.cacheStatsEl.innerHTML = '<p style="margin: 0;">No cached audio files yet.</p>'
+        return
+      }
+
+      const oldestDate = stats.oldestEntry ? new Date(stats.oldestEntry).toLocaleDateString() : 'N/A'
+      const newestDate = stats.newestEntry ? new Date(stats.newestEntry).toLocaleDateString() : 'N/A'
+
+      this.cacheStatsEl.innerHTML = `
+        <p style="margin: 5px 0;"><strong>Cached Audio Files:</strong> ${stats.totalFiles}</p>
+        <p style="margin: 5px 0;"><strong>Total Size:</strong> ${stats.totalSizeMB} MB</p>
+        <p style="margin: 5px 0;"><strong>Oldest Entry:</strong> ${oldestDate}</p>
+        <p style="margin: 5px 0;"><strong>Newest Entry:</strong> ${newestDate}</p>
+      `
+    } catch (error) {
+      console.error('Error loading cache stats:', error)
+      this.cacheStatsEl.innerHTML = '<p style="margin: 0; color: #d32f2f;">Error loading cache statistics</p>'
+    }
+  }
+
+  private async clearCache(): Promise<void> {
+    const confirmed = confirm('Delete all cached audio files? This will require re-downloading audio from ElevenLabs.')
+    if (!confirmed) {
+      return
+    }
+
+    try {
+      this.clearCacheButton.disabled = true
+      this.clearCacheButton.textContent = 'Clearing...'
+
+      const result = await window.electronAPI.tts.clearCache()
+
+      alert(`Cleared ${result.deleted} cached files`)
+      await this.updateCacheStats()
+
+      this.clearCacheButton.disabled = false
+      this.clearCacheButton.textContent = 'Clear Cache'
+    } catch (error) {
+      console.error('Error clearing cache:', error)
+      alert('Error clearing cache')
+      this.clearCacheButton.disabled = false
+      this.clearCacheButton.textContent = 'Clear Cache'
+    }
   }
 
   getElement(): HTMLElement {

@@ -86,6 +86,12 @@ export class PlaybackEngine {
     this.state.isPaused = false
     this.abortController = new AbortController()
 
+    // Initialize elapsed time to current entry's start time
+    const currentEntry = this.entries[this.state.currentEntryIndex]
+    if (currentEntry) {
+      this.state.elapsedTime = currentEntry.cumulativeStartTime
+    }
+
     this.startTimeTracking()
     this.notifyStateChange()
 
@@ -173,11 +179,44 @@ export class PlaybackEngine {
 
     this.tts.cancel()
     this.state.currentEntryIndex = index
+    this.state.elapsedTime = this.entries[index].cumulativeStartTime
     this.notifyEntryChange()
 
     if (this.state.isPlaying && !this.state.isPaused) {
       this.restartPlayback()
     }
+  }
+
+  // Seek to specific time
+  seekToTime(time: number): void {
+    if (time < 0 || time > this.totalDuration()) return
+
+    // Find entry at this time
+    const index = this.findEntryAtTime(time)
+    if (index >= 0) {
+      this.jumpToEntry(index)
+    }
+  }
+
+  private findEntryAtTime(time: number): number {
+    for (let i = 0; i < this.entries.length; i++) {
+      const entry = this.entries[i]
+      const endTime = entry.cumulativeStartTime + entry.estimatedDuration
+      if (time >= entry.cumulativeStartTime && time < endTime) {
+        return i
+      }
+    }
+    // If not found in any entry, find the closest one
+    return this.entries.findIndex((e, i) => {
+      const nextEntry = this.entries[i + 1]
+      return !nextEntry || time < nextEntry.cumulativeStartTime
+    })
+  }
+
+  private totalDuration(): number {
+    if (this.entries.length === 0) return 0
+    const lastEntry = this.entries[this.entries.length - 1]
+    return lastEntry.cumulativeStartTime + lastEntry.estimatedDuration
   }
 
   private async restartPlayback(): Promise<void> {
@@ -336,7 +375,8 @@ export class PlaybackEngine {
 
     this.timeUpdateInterval = window.setInterval(() => {
       if (this.state.isPlaying && !this.state.isPaused) {
-        this.state.elapsedTime += 0.1
+        // Increment by 0.1s scaled by playback rate
+        this.state.elapsedTime += 0.1 * this.state.playbackRate
         this.callbacks.onTimeUpdate?.(this.state.elapsedTime)
       }
     }, 100)

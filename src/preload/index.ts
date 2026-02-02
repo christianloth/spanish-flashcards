@@ -50,6 +50,20 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     getVoices: (): Promise<VoiceInfo[]> => {
       return ipcRenderer.invoke('tts-get-voices')
+    },
+
+    getCacheStats: (): Promise<{
+      totalFiles: number
+      totalSize: number
+      totalSizeMB: string
+      oldestEntry: string | null
+      newestEntry: string | null
+    }> => {
+      return ipcRenderer.invoke('tts-get-cache-stats')
+    },
+
+    clearCache: (): Promise<{ deleted: number }> => {
+      return ipcRenderer.invoke('tts-clear-cache')
     }
   }
 })
@@ -69,6 +83,14 @@ declare global {
         cleanup: (filePath: string) => Promise<void>
         testConnection: () => Promise<{ success: boolean; error?: string }>
         getVoices: () => Promise<VoiceInfo[]>
+        getCacheStats: () => Promise<{
+          totalFiles: number
+          totalSize: number
+          totalSizeMB: string
+          oldestEntry: string | null
+          newestEntry: string | null
+        }>
+        clearCache: () => Promise<{ deleted: number }>
       }
     }
   }

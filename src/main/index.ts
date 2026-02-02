@@ -9,7 +9,9 @@ import {
   cleanupAudioFile,
   testConnection,
   getAvailableVoices,
-  initFromEnv
+  initFromEnv,
+  getCacheStats,
+  clearCache
 } from './ttsHandler'
 
 // Load API key from .env file on startup
@@ -85,6 +87,14 @@ ipcMain.handle('tts-test-connection', async () => {
 
 ipcMain.handle('tts-get-voices', async () => {
   return getAvailableVoices()
+})
+
+ipcMain.handle('tts-get-cache-stats', async () => {
+  return getCacheStats()
+})
+
+ipcMain.handle('tts-clear-cache', async () => {
+  return clearCache()
 })
 
 app.whenReady().then(() => {

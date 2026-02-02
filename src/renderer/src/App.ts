@@ -53,11 +53,17 @@ export class App {
       this.playbackEngine.setTimeWindow(window)
     }
 
+    // Timeline seek
+    this.timelineSlider.onSeek = (time) => {
+      this.playbackEngine.seekToTime(time)
+    }
+
     // Playback engine callbacks
     this.playbackEngine.setCallbacks({
       onStateChange: (state) => this.handleStateChange(state),
       onEntryChange: (entry, index) => this.handleEntryChange(entry, index),
       onPhaseChange: (phase) => this.handlePhaseChange(phase),
+      onTimeUpdate: (time) => this.handleTimeUpdate(time),
       onComplete: () => this.handlePlaybackComplete()
     })
 
@@ -243,6 +249,10 @@ export class App {
 
   private handlePhaseChange(phase: PlaybackPhase): void {
     this.flashCard.setPhase(phase)
+  }
+
+  private handleTimeUpdate(time: number): void {
+    this.timelineSlider.updatePlaybackPosition(time)
   }
 
   private handlePlaybackComplete(): void {

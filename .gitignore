@@ -7,6 +7,10 @@
 .env
 .env.local
 
+# TTS audio cache
+.tts-cache/*.mp3
+.tts-cache/cache-index.json
+
 /node_modules
 npm-debug.log*
 yarn-debug.log*
